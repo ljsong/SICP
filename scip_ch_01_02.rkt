@@ -1,4 +1,5 @@
 #lang racket
+(require profile)
 
 (define (factorial n)
   (factor-iter 1 1 n))
@@ -157,10 +158,15 @@
 (define (smallest-divisor n)
   (find-divisor n 2))
 
+(define (next-divisor n)
+  (if (= n 2)
+      3
+      (+ n 2)))
+
 (define (find-divisor n test-divisor)
   (cond ((> (square test-divisor) n) n)
         ((divides? test-divisor n) test-divisor)
-        (else (find-divisor n (+ test-divisor 1)))))
+        (else (find-divisor n (next-divisor test-divisor)))))
 
 (define (divides? a b)
   (= (remainder b a) 0))
@@ -173,13 +179,20 @@
 (define (expmod base exp m)
   (cond ((= exp 0) 1)
         ((even? exp)
-         (remainder (square (expmod base (/ exp 2) m)) m))
+         ; This is the basic way to test prime number
+         ;(remainder (square (expmod base (/ exp 2) m)) m))
+         ; from here to end of this block is Miller-Rabin testing
+         (define x (expmod base (/ exp 2) m))
+         (define y (remainder (square x) m))
+         (if (and (not (= x 1)) (not (= x (- m 1))) (= y 1))
+             0
+             y))
         (else
          (remainder (* base (expmod base (- exp 1) m)) m))))
 
 (define (format-test n)
   (define (try-it a)
-    (= (expmod a n n) a))
+    (= (expmod a (- n 1) n) 1))
   (try-it (+ 1 (random (- n 1)))))
 
 (define (fast-prime? n times)
@@ -187,5 +200,38 @@
         ((format-test n) (fast-prime? n (- times 1)))
         (else #f)))
 
-(fast-prime? 269 5)
-                        
+(fast-prime? 1999 5)
+
+(define (timed-prime-test n)
+  (newline)
+  (display n)
+  (start-prime-test n (current-inexact-milliseconds))
+  (newline))
+
+(define (start-prime-test n start-time)
+  (when (fast-prime? n 2)
+      (report-prime (- (current-inexact-milliseconds) start-time))))
+
+(define (report-prime elapsed-time)
+  (display " *** ")
+  (display elapsed-time))
+
+(timed-prime-test 1999)
+
+(define (search-for-primes lbound ubound)
+  (when (< lbound ubound)
+    (unless (even? lbound)
+      (timed-prime-test lbound))
+    (search-for-primes (+ lbound 1) ubound)))
+
+(search-for-primes 1000 1050)
+
+(define (test-mod n)
+  (define (test-mod-iter a)
+    (when (and (< a n) (= (expmod a (- n 1) n) 1))
+      (display a)
+      (display " ")
+      (test-mod-iter (+ a 1))))
+  (test-mod-iter 1))
+
+(test-mod 561)
