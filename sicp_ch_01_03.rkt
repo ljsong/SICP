@@ -66,5 +66,50 @@
   (* (/ h 3) (sum simpson-term a simpson-next b)))
 
 (simpson-integral cube 0 1 100)
-  
+
+#| recursive version
+(define (product term a next b)
+  (if (> a b)
+      1
+      (* (term a)
+         (product term (next a) next b))))
+|#
+
+; iter version
+(define (product term a next b)
+  (define (iter x result)
+    (if (> x b)
+        result
+        (iter (next x) (* (term x) result))))
+  (iter 1 1))
+
+(define (factorial n)
+  (product identity 1 inc n))
+
+(factorial 5)
+
+(define (ex_1_31 n)
+  (define (term x)
+    (* (/ (* 2 x) (+ (* 2 x) 1))
+       (/ (* 2 (+ x 1)) (+ (* 2 x) 1))))
+  (define (next x)
+    (+ x 1.0))
+  (* 4 (product term 1 next n)))
+
+(ex_1_31 100)
+
+(define (accumulate combiner null-value term a next b)
+  (if (> a b)
+      null-value
+      (combiner (term a)
+                (accumulate combiner null-value term (next a) next b))))
+
+(define (sum-test term a next b)
+  (accumulate + 0 term a next b))
+
+(define (product-test term a next b)
+  (accumulate * 1 term a next b))
+
+(sum-test cube 1 inc 10)
+(product-test identity 1 inc 5)
   
