@@ -112,4 +112,81 @@
 
 (sum-test cube 1 inc 10)
 (product-test identity 1 inc 5)
-  
+
+(define (filtered-accumulate combiner null-value filter? term a next b)
+  (if (> a b)
+      null-value
+      (if (filter? a)
+          (combiner (term a)
+                    (filtered-accumulate combiner null-value filter? term (next a) next b))
+          (combiner null-value
+                    (filtered-accumulate combiner null-value filter? term (next a) next b)))))
+
+(define (prime? n)
+  (define (smallest-divisor n)
+    (find-divisor n 2))
+  (define (square x) (* x x))
+  (define (find-divisor n test-divisor)
+    (cond ((> (square test-divisor) n) n)
+          ((= (remainder n test-divisor) 0) test-divisor)
+          (else (find-divisor n (+ 1 test-divisor)))))
+  (if (< n 2)
+      #f
+      (= n (smallest-divisor n))))
+
+(filtered-accumulate + 0 prime? identity 1 inc 11)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; SUB SECTION 2 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (f x y)
+  (let ((a (+ 1 (* x y)))
+        (b (- 1 y)))
+    (+ (* x ((lambda (x) (* x x)) a))
+       (* y b)
+       (* a b))))
+
+(f 5 4)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; SUB SECTION 3 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (search f neg-point pos-point)
+  (let ((midpoint ((lambda (x y) (/ (+ x y) 2)) neg-point pos-point)))
+    (if (close-enough? neg-point pos-point)
+        midpoint
+        (let ((test-value (f midpoint)))
+          (cond ((> test-value 0)
+                 (search f neg-point midpoint))
+                ((< test-value 0)
+                 (search f midpoint pos-point))
+                (else
+                 (midpoint)))))))
+
+(define (close-enough? x y)
+  (< (abs (- x y)) 0.001))
+
+(define (half-interval-method f a b)
+  (let ((a-value (f a))
+        (b-value (f b)))
+    (cond ((and (< a-value 0) (> b-value 0))
+           (search f a b))
+          ((and (> a-value 0) (< b-value 0))
+           (search f b a))
+          (else
+           (error "Values are not of opposite sign" a b)))))
+
+(half-interval-method sin 2.0 4.0)
+
+(half-interval-method (lambda (x) (- (* x x x) (* 2 x) 3))
+                      1.0 2.0)
+
+(define (fixed-point f first-guess)
+  (define (close-enough? v1 v2)
+    (< (abs (- v1 v2)) 0.000001))
+  (define (try guess)
+    (let ((next (f guess)))
+      (if (close-enough? guess next)
+          next
+          (try next))))
+  (try first-guess))
+
+(fixed-point cos 1.0)
