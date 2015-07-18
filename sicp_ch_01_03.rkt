@@ -180,14 +180,9 @@
                       1.0 2.0)
 
 (define (fixed-point f first-guess)
-  (newline)
-  (display "****** Start guessing ******")
-  (newline)
   (define (close-enough? v1 v2)
     (< (abs (- v1 v2)) 0.000001))
   (define (try guess)
-    (display guess)
-    (newline)
     (let ((next (f guess)))
       (if (close-enough? guess next)
           next
@@ -201,3 +196,90 @@
 (fixed-point (lambda (x) (+ 1 (/ 1 x))) 1.0)
 
 (fixed-point (lambda (x) (/ (+ x (/ (log 1000) (log x))) 2)) 2.0)
+
+(define (cont-frac n d k)
+  (define (cont-frac-recur c)
+    (let ((a (n c))
+          (b (d c)))
+      (if (= c k)
+          (/ a b)
+          (/ a (+ b (cont-frac-recur (+ c 1)))))))
+  (define (cont-frac-iter c result)
+    (let ((a (n c))
+          (b (d c)))
+      (if (= c 0)
+          result
+          (cont-frac-iter (- c 1) (/ a (+ b result))))))
+  ;(cont-frac-recur 1)
+  (cont-frac-iter k 0))
+
+(cont-frac (lambda (i) 1.0)
+           (lambda (i) 1.0)
+           11)
+
+(define (approximate-e k)
+  (define (d k)
+    (if (= (remainder k 3) 2)
+        ((lambda (x) (* 2 (+ (quotient x 3) 1))) k)
+        1))
+  (cont-frac (lambda (i) 1.0)
+             d
+             k))
+
+(approximate-e 50)
+
+(define (tan-cf x k)
+  (define (n k)
+    (if (= k 1)
+        x
+        (* (- x) x)))
+  (define (d k)
+    (- (* 2 k) 1))
+  (cont-frac n d k))
+
+(tan-cf 3.1415926 6)
+
+
+;;;;;;;;;;;;;;;;;;;;;; SUB SECTION 4 ;;;;;;;;;;;;;;;;;;;;
+(define (average x y)
+  (/ (+ x y) 2))
+
+(define (square x)
+  (* x x))
+
+(define (average-damp f)
+  (lambda (x) (average x (f x))))
+
+((average-damp square) 10)
+
+(define (sqrt x)
+  (fixed-point (average-damp (lambda (y) (/ x y)))
+               1.0))
+
+(sqrt 5)
+
+(define (cube-root x)
+  (fixed-point (average-damp (lambda (y) (/ x (square y))))
+               1.0))
+
+(cube-root 9)
+
+(define (deriv g)
+  (define dx 0.00001)
+  (lambda (x)
+    (/ (- (g (+ x dx)) (g x)) dx)))
+
+((deriv cube) 5)
+
+(define (newton-transform g)
+  (lambda (x)
+    (- x (/ (g x) ((deriv g) x)))))
+
+(define (newtons-method g guess)
+  (fixed-point (newton-transform g) guess))
+
+(define (sqrt-test x)
+  (newtons-method (lambda (y) (- (square y) x))
+                  1.0))
+
+(sqrt-test 14)
