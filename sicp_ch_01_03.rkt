@@ -283,3 +283,92 @@
                   1.0))
 
 (sqrt-test 14)
+
+(define (fixed-point-of-transform g transform guess)
+  (fixed-point (transform g) guess))
+
+(define (sqrt-damp x)
+  (fixed-point-of-transform  (lambda (y) (/ x y))
+                             average-damp
+                             1.0))
+
+(define (sqrt-newtons x)
+  (fixed-point-of-transform (lambda (y) (- (square y) x))
+                            newton-transform
+                            1.0))
+
+(sqrt-damp 5)
+(sqrt-newtons 5)
+
+(define (cubic a b c)
+  (lambda (x) (+ (cube x) (* a (square x)) (* b x) c)))
+
+(define (ex_1_40 a b c)
+  (newtons-method (cubic a b c) 1.0))
+
+(ex_1_40 3 2 1)
+
+(define (double g)
+  (lambda (x) (g (g x))))
+
+(((double (double double)) inc) 5)
+
+(define (compose f g)
+  (lambda (x) (f (g x))))
+
+((compose square inc) 6)
+
+(define (repeated f n)
+  (define (repeated-iter f g n)
+    (if (= n 0)
+        g
+        (repeated-iter f (compose f g) (- n 1))))
+  (repeated-iter f (lambda (x) x) n))
+
+((repeated square 3) 2)
+
+(define (smooth f)
+  (define dx 0.000001)
+  (lambda (x) (/ (+ (f (- x dx)) (f x) (f (+ x dx))) 3)))
+
+((smooth square) 2)
+
+(define (to-integer number)
+  (truncate (inexact->exact number)))
+
+(define (power x n)
+  (cond ((= n 0) 1)
+        ((even? n) (power (square x) (/ n 2)))
+        (else (* x (power x (- n 1))))))
+
+(power 2 5)
+
+(define (rootn x n)
+  (define c (to-integer (/ (log n) (log 2))))
+  (fixed-point ((repeated average-damp c)
+                (lambda (y) (/ x (power y (- n 1)))))
+                1.0))
+
+(rootn 1000 3)
+
+(define (iterative-improve good-enough? improve)
+  (define (try-guess guess)
+    (define next (improve guess))
+    (if (good-enough? guess next)
+        next
+        (try-guess next)))
+  try-guess)
+
+(define (sqrt-ex x)
+  ((iterative-improve (lambda (x y) (if (< (abs (- x y)) 0.00001) #t #f))
+                     (lambda (y) (/ (+ y (/ x y)) 2)))
+   1.0))
+
+(sqrt-ex 16)
+
+(define (fixed-point-ex f x)
+  ((iterative-improve (lambda (x y) (if (< (abs (- x y)) 0.00001) #t #f))
+                     (average-damp f))
+   x))
+
+(fixed-point-ex (lambda (y) (+ (sin y) (cos y))) 1.0)
