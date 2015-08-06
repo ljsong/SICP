@@ -52,4 +52,75 @@
       (cons (reverse (cdr items)) (car items))))
 
 (reverse (list 1 4 9 16 25 36))
-      
+
+(define (first-denomination coin-values)
+  (car coin-values))
+
+(define (except-first-denomination coin-values)
+  (cdr coin-values))
+
+(define (no-more? coin-values)
+  (= (length coin-values) 0))
+
+(define (cc amount coin-values)
+  (cond ((= amount 0) 1)
+        ((or (< amount 0) (no-more? coin-values)) 0)
+        (else
+         (+ (cc amount
+                (except-first-denomination coin-values))
+            (cc (- amount
+                   (first-denomination coin-values))
+                coin-values)))))
+
+(define us-coins (list 50 25 10 5 1))
+(define uk-coins (list 100 50 20 10 5 2 1 0.5))
+
+(cc 100 us-coins)
+
+(define (even? number)
+  (= (remainder number 2) 0))
+
+(define (same-parity . w)
+  (define first-number (car w))
+  (define (same-parity-iter items)
+    (cond ((null? items) '())
+          ((even? (+ first-number (car items)))
+           (cons (car items) (same-parity-iter (cdr items))))
+          (else
+           (same-parity-iter (cdr items)))))
+  (same-parity-iter w))
+
+(same-parity 0 1 2 3 4 5 6 7)
+
+(define (map items func)
+  (if (null? items)
+      '()
+      (cons (func (car items))
+            (map (cdr items) func))))
+
+(map (list 1 2 -3 4 -5 6) abs)
+
+(define (scale-list items factor)
+  (map items (lambda (x) (* x factor))))
+
+(scale-list (list 1 2 3 4 5) 2)
+
+(define (square x) (* x x))
+
+(define (square-list items)
+  (if (null? items)
+      '()
+      (cons (square (car items)) (square-list (cdr items)))))
+
+(square-list (list 1 2 3 4))
+
+(define (square-list1 items)
+  (define (iter things answer)
+    (if (null? things)
+        (reverse answer)
+        (iter (cdr things)
+              (cons (square (car things))
+                    answer))))
+  (iter items '()))
+
+(square-list1 (list 1 2 3 4))
