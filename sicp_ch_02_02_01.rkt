@@ -46,10 +46,20 @@
 
 (last-pair (list 23 72 149 34))
 
+#|
 (define (reverse items)
-  (if (= (length items) 1)
-      (car items)
-      (cons (reverse (cdr items)) (car items))))
+  (define (iter remained-items result)
+    (if (null? remained-items)
+        result
+        (iter (cdr remained-items)
+              (cons (car remained-items) result))))
+  (iter items '()))
+|#
+
+(define (reverse items)
+  (if (null? items)
+      '()
+      (append (reverse (cdr items)) (list (car items)))))
 
 (reverse (list 1 4 9 16 25 36))
 
@@ -122,5 +132,14 @@
               (cons (square (car things))
                     answer))))
   (iter items '()))
+; When printing a list, the dotted pair notation is only used if the CDR of a cons cell is not a list.
 
 (square-list1 (list 1 2 3 4))
+
+(define (for-each func items)
+  (cond ((not (null? items))
+         (func (car items))
+         (for-each func (cdr items)))))
+
+(for-each (lambda (x) (newline) (display (+ x 4)))
+          (list 57 321 88))
