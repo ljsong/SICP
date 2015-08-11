@@ -52,26 +52,25 @@ y
                         
 (fringe y)
 
-(define (make-mobile left right)
-  (list left right))
+(car '(((5 3) (4 6))))
 
+(define (make-mobile left right)
+  (list left right))    ; notice: (list 1 2) is equal to (cons 1 (cons 2 null))
+                        ; so (cdr (cons 1 (cons 2 null))) is (2) and (cdr (cons 1 2)) is 2
 (define (make-branch length structure)
   (list length structure))
 
 (define (left-branch mobile)
-  (newline)
-  (display "left branch: ")
-  (display mobile)
   (car mobile))
 
 (define (right-branch mobile)
-  (cdr mobile))
+  (cadr mobile))
 
 (define (branch-length branch)
   (car branch))
 
 (define (branch-structure branch)
-    (cdr branch))
+    (cadr branch))
 
 (define (total-weight mobile)
   (cond ((null? mobile) 0)
@@ -80,22 +79,28 @@ y
                  (total-weight (branch-structure (right-branch mobile)))))))
 
 (define (balance? mobile)
-  (define left (left-branch mobile))
-  (define right (right-branch mobile))
-  (if (not (pair? mobile)) #t
-      (= (* (branch-length left) (total-weight left))
-         (* (branch-length right) (total-weight right)))))
+  (cond ((not (pair? mobile)) #t)
+        ((let ((left (left-branch mobile))
+              (right (right-branch mobile)))
+           (and (balance? (branch-structure left))    ; 3 conditions, left torque is equal to right one
+                (balance? (branch-structure right))   ; left, right sub mobile is balance
+                (= (* (branch-length left)
+                      (total-weight (branch-structure left)))
+                   (* (branch-length right)
+                      (total-weight (branch-structure right)))))) #t)
+        (else #f)))
 
-(define left-left-child (make-branch 5 3))
-(define left-right-child (make-branch 4 6))
+(define left-left-child (make-branch 2 9))
+(define left-right-child (make-branch 6 3))
 (define left-mobile (make-mobile left-left-child left-right-child))
 (define left-child (make-branch 2 left-mobile))
 
-(define right-left-child (make-branch 2 3))
+(define right-left-child (make-branch 2 2))
 (define right-right-child (make-branch 1 4))
 (define right-mobile (make-mobile right-left-child right-right-child))
 (define right-child (make-branch 4 right-mobile))
 
 (define top-mobile (make-mobile left-child right-child))
 (total-weight top-mobile)
+(balance? top-mobile)
 
