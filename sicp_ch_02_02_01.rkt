@@ -103,12 +103,12 @@
 (same-parity 0 1 2 3 4 5 6 7)
 
 (define (map items func)
-  (if (null? items)
-      '()
-      (cons (func (car items))
-            (map (cdr items) func))))
+  (cond ((null? items) '())
+        ((not (pair? items)) (func items))
+        (else (cons (map (car items) func)
+            (map (cdr items) func)))))
 
-(map (list 1 2 -3 4 -5 6) abs)
+(map (list 1 2 (list (list -3) 4) (list -5 6)) abs)
 
 (define (scale-list items factor)
   (map items (lambda (x) (* x factor))))
