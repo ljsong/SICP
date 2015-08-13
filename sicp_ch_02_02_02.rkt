@@ -104,6 +104,7 @@ y
 (total-weight top-mobile)
 (balance? top-mobile)
 
+#|
 (define (scale-tree tree factor)
   (cond ((null? tree) null)
         ((not (pair? tree)) (* tree factor))
@@ -111,4 +112,39 @@ y
                     (scale-tree (cdr tree) factor)))))
 
 (scale-tree (list 1 (list 2 (list 3 4) 5) (list 6 7)) 10)
+|#
 
+(define (tree-map func items)
+  (cond ((null? items) '())
+        ((not (pair? items)) (func items))
+        (else
+         (cons (tree-map func (car items))
+               (tree-map func (cdr items))))))
+
+(define (scale-tree tree factor)
+  (map (lambda (sub-tree)
+         (if (pair? sub-tree)
+             (scale-tree sub-tree factor)
+             (* sub-tree factor)))
+       tree))
+
+(scale-tree (list 1 (list 2 (list 3 4) 5) (list 6 7)) 10)
+
+(define (square-tree items)
+  (tree-map (lambda (x) (* x x)) items))
+
+(square-tree (list 1 (list 2 (list 3 4) 5) (list 6 7)))
+
+(define (subsets s)
+  (if (null? s)
+      (list null)
+      (let ((rest (subsets (cdr s))))
+        (append rest (map (lambda (items) (append items (list (car s)))) rest)))))
+#| 具体的做法是将s的第一个元素添加到由s剩余的元素生成的子集当中
+例如：第一个子集是(),接着将3添加到由s剩余元素生成的子集即'()中
+此时生成新子集'(3)，已经生成的子集为'(), '(3)，再将2添加到已经生成的子集中
+生成新的子集'(2), '(2 3)，此时的子集有'(),'(2),'(3),'(2 3)，再将1添加到
+已生成的子集中，此时完成所有子集的生成过程  |#
+
+(subsets (list 1 2 3))
+(subsets (list 1 2 (list 3 4) 5))
