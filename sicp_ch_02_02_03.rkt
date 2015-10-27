@@ -99,3 +99,66 @@
 
 (define s (list (list 1 2 3) (list 4 5 6) (list 7 8 9) (list 10 11 12)))
 (accumulate-n + 0 s)
+
+(define (scale-list list factor)
+  (cond ((null? list) null)
+        ((not (pair? list)) (* list factor))
+        (else (cons (scale-list (car list) factor)
+                    (scale-list (cdr list) factor)))))
+
+(scale-list '(1 2 3 (4 (5) 6) 7) 2)
+
+(define (dot-product v w)
+  (accumulate + 0 (map * v w)))
+
+(define (matrix-*-vector m v)
+  (map (lambda (seq)
+         (dot-product seq v)) m))
+
+(define (transpose mat)
+  (accumulate-n cons null mat))
+
+(define (matrix-*-matrix m n)
+  (let ((cols (transpose n)))
+    (map (lambda (seq)
+           (map (lambda (col)
+                  (dot-product seq col)) cols)) m)))
+
+(define (matrix-*-matrix-1 m n)
+  (let ((cols (transpose n)))
+    (map (lambda (seq)
+           (matrix-*-vector cols seq)) m)))
+
+(define m '((1 2 3 4) (4 5 6 7) (7 8 9 0)))
+(define n '(4 7 2 5))
+(define v '((1 2 3) (4 5 6) (7 8 9)))
+(define w '((5 4 7 1) (2 5 6 0) (3 2 8 9)))
+
+(matrix-*-vector m n)
+
+(transpose m)
+
+(matrix-*-matrix v w)
+(matrix-*-matrix-1 v w)
+
+(define (fold-left op initial sequence)
+  (define (iter result rest)
+    (if (null? rest)
+        result
+        (iter (op result (car rest))
+              (cdr rest))))
+  (iter initial sequence))
+
+(accumulate * 1 (list 1 2 3))
+(fold-left * 1 (list 1 2 3))
+(accumulate list null (list 1 2 3))
+(fold-left list null (list 1 2 3))
+
+(define (reverse sequence)
+  (accumulate (lambda (x y) (append y (list x))) null sequence))
+
+(define (reverse1 sequence)
+  (fold-left (lambda (x y) (cons y x)) null sequence))
+
+(reverse1 (list 1 2 3))
+(reverse (list 1 2 3 4 5 6))
