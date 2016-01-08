@@ -35,13 +35,19 @@
   (and (pair? x) (eq? (car x) '+)))
 
 (define (addend s) (cadr s))
-(define (augend s) (caddr s))
+(define (augend s)
+  (if (null? (cdddr s))
+      (caddr s)
+      (cons '+ (cddr s))))
 
 (define (product? x)
   (and (pair? x) (eq? (car x) '*)))
 
 (define (multiplier p) (cadr p))
-(define (multiplicand p) (caddr p))
+(define (multiplicand p)
+  (if (null? (cdddr p))
+      (caddr p)
+      (cons '* (cddr p))))
 
 (define (exponentiation? x)
   (and (pair? x) (eq? (car x) '**)))
@@ -92,9 +98,9 @@
            (make-exponentiation (base exp) (- (exponent exp) 1))
            (deriv (base exp) var))))
         (else
-         (error "unknown expression type --DERIV" exp))))
+         (error "unknown expression type -- DERIV" exp))))
 
 (deriv '(+ x 3) 'x)
 (deriv '(* x y) 'x)
-(deriv '(* (* x y) (+ x 3)) 'x)
+(deriv '(* x y (+ x 3)) 'x)
 (deriv '(+ (* 3 x) (** x 5)) 'x)
