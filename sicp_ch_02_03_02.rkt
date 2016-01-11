@@ -106,6 +106,13 @@
                     (left-branch set)
                     (adjoin-set x ((right-branch set)))))))
 
+(define (tree->list tree)
+  (if (null? tree)
+      '()
+      (append (tree->list (left-branch tree))
+              (cons (entry tree)
+                    (tree->list (right-branch tree))))))
+
 #| 初始认为平衡树为空树，remaining-elts为全部元素
  将列表分为三部分即，左子树 | 根 | 右子树 |#
 (define (partial-tree elts n)
@@ -128,7 +135,36 @@
   (car (partial-tree elements (length elements))))
 
 (define (union-tree-set s1 s2)
+  (let ((l1 (tree->list s1))
+        (l2 (tree->list s2)))
+    (let ((us (union-set l1 l2)))
+      (list->tree us))))
   
 
+(define (intersection-tree-set s1 s2)
+  (let ((l1 (tree->list s1))
+        (l2 (tree->list s2)))
+    (let ((is (intersection-set l1 l2)))
+      (list->tree is))))
+
 (list->tree '(1 3 5 7 9 11))
+
+(define s1 '(1 3 5 2 6 4))
+(define s2 '(7 9 3 8 1))
+
+(union-tree-set (list->tree s1) (list->tree s2))
+(intersection-tree-set (list->tree s1) (list->tree s2))
+
+(define (lookup given-key set-of-records)
+  (cond ((null? set-of-records) false)
+        ((= given-key (entry set-of-records))
+         (entry set-of-records))
+        ((< given-key (entry set-of-records))
+         (lookup given-key (left-branch set-of-records)))
+        (else (lookup given-key (right-branch set-of-records)))))
+
+(define s3 '(1 3 5 7 9 11 13))
+(define t1 (list->tree s3))
+
+(lookup 4 t1)
       
