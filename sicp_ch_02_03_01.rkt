@@ -104,3 +104,17 @@
 (deriv '(* x y) 'x)
 (deriv '(* x y (+ x 3)) 'x)
 (deriv '(+ (* 3 x) (** x 5)) 'x)
+
+(provide make-sum)
+(provide addend)
+(provide augend)
+
+(provide make-product)
+(provide multiplier)
+
+(provide make-exponentiation)
+(provide exponent)
+(provide base)
+
+(provide variable?)
+(provide same-variable?)
