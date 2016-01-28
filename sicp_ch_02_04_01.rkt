@@ -105,3 +105,11 @@
 (define (div-complex z1 z2)
   (make-from-mag-ang (/ (magnitude z1) (magnitude z2))
                      (- (angle z1) (angle z2))))
+
+(provide add-complex)
+(provide sub-complex)
+(provide mul-complex)
+(provide div-complex)
+(provide attach-tag)
+(provide type-tag)
+(provide contents)
