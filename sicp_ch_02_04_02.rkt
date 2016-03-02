@@ -4,7 +4,7 @@
 
 ; 可以将构造函数make-xxx以'make存入表中，这样可以根据运算符动态加载构造函数
 
-(define (apply-generic op args)
+(define (apply-generic op . args)
   (let ((type-tags (map type-tag args)))
     (let ((proc (get type-tags op)))
       (if proc
@@ -89,13 +89,13 @@
     (cons (* r (cos a)) (* r (sin a))))
 
   (define (tag x) (attach-tag 'rectangular x))
-  (put 'real-part '(rectangular) real-part)
-  (put 'imag-part '(rectangular) imag-part)
-  (put 'magnitude '(rectangular) magnitude)
-  (put 'angle '(rectangular) angle)
-  (put 'make-from-real-imag 'rectangular
+  (put '(rectangular) 'real-part real-part)
+  (put '(rectangular) 'imag-part imag-part)
+  (put '(rectangular) 'magnitude magnitude)
+  (put '(rectangular) 'angle angle)
+  (put 'rectangular 'make-from-real-imag
        (lambda (x y) (tag (make-from-real-imag x y))))
-  (put 'make-from-mag-ang 'rectangular
+  (put 'rectangular 'make-from-mag-ang 
        (lambda (r a) (tag (make-from-mag-ang r a))))
   'done)
 
@@ -114,13 +114,13 @@
 
   ;;interface to the rest of the system
   (define (tag x) (attach-tag 'polar x))
-  (put 'real-part '(polar) real-part)
-  (put 'imag-part '(polar) imag-part)
-  (put 'magnitude '(polar) magnitude)
-  (put 'angle '(polar) angle)
-  (put 'make-from-real-imag 'polar
+  (put '(polar) 'real-part real-part)
+  (put '(polar) 'imag-part imag-part)
+  (put '(polar) 'magnitude magnitude)
+  (put '(polar) 'angle angle)
+  (put 'polar 'make-from-real-imag 
        (lambda (x y) (tag (make-from-real-imag x y))))
-  (put 'make-from-mag-ang 'polar
+  (put 'polar 'make-from-mag-ang 
        (lambda (r a) (tag (make-from-mag-ang r a))))
   'done)
 
@@ -142,3 +142,5 @@
 (provide get)
 (provide apply-generic)
 (provide magnitude)
+(provide real-part)
+(provide imag-part)
