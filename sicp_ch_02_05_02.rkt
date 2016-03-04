@@ -1,4 +1,7 @@
 #lang racket
+(require "sicp_ch_02_04_01.rkt")
+(require "sicp_ch_02_04_02.rkt")
+(require "sicp_ch_02_05_01.rkt")
 
 #|
 (define (apply-generic op . args)
@@ -71,6 +74,10 @@
   (define (same-variable? v1 v2)
     (and (variable? v1) (variable? v2) (eq? v1 v2)))
 
+  (define (neg p)
+    (let ((tlist (term-list p)))
+      (cons (variable p) (cons (
+
   (define (add-poly p1 p2)
     (if (same-variable? (variable p1) (variable p2))
         (make-poly (variable p1)
@@ -93,7 +100,7 @@
         (cons term term-list)))
 
   (define (=zero? p)
-    (= (order p) 0))
+    (and (= (order p) 0) (=zero? (rest-terms p))))
 
   (define (the-empty-termlist) '())
   (define (first-term term-list) (car term-list))
@@ -102,7 +109,7 @@
 
   (define (make-term order coeff) (list order coeff))
   (define (order term) (car term))
-  (define (coeff term (cadr term))
+  (define (coeff term) (cadr term))
    
 
   (define (tag p) (attach-tag 'polynomial p))
@@ -115,3 +122,6 @@
   (put 'polynomial '=zero?
        (lambda (p) (tag (=zero? p))))
   'done)
+
+(install-polynomial-package)
+(

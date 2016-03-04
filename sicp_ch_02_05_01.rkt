@@ -140,3 +140,8 @@
 (sub 98 6)
 (=zero? z)
 (equ? z z)
+
+(provide add)
+(provide sub)
+(provide mul)
+(provide div)
