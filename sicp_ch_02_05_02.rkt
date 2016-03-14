@@ -36,6 +36,15 @@
     (cons variable term-list))
   (define (variable p) (car p))
   (define (term-list p) (cdr p))
+
+  (define (the-empty-termlist) '())
+  (define (first-term term-list) (car term-list))
+  (define (rest-terms term-list) (cdr term-list))
+  (define (empty-termlist? term-list) (null? term-list))
+
+  (define (make-term order coeff) (list order coeff))
+  (define (order term) (car term))
+  (define (coeff term) (cadr term))
   
   (define (variable? x) (symbol? x))
 
@@ -57,6 +66,9 @@
                      (add-terms (rest-terms L1)
                                 (rest-terms L2)))))))))
 
+  (define (sub-terms L1 L2)
+    (add-terms L1 (neg L2)))
+
   (define (mul-terms L1 L2)
     (if (empty-termlist? L1)
         (the-empty-termlist)
@@ -76,7 +88,10 @@
 
   (define (neg p)
     (let ((tlist (term-list p)))
-      (cons (variable p) (cons (
+      (let ((t1 (first-term tlist))
+            (rlist (rest-terms tlist)))
+        (let ((neg-term (make-term (- 0 (order t1)) (coeff t1))))
+          (make-poly (variable p) (add-terms neg-term (neg rlist)))))))
 
   (define (add-poly p1 p2)
     (if (same-variable? (variable p1) (variable p2))
@@ -100,18 +115,9 @@
         (cons term term-list)))
 
   (define (=zero? p)
-    (and (= (order p) 0) (=zero? (rest-terms p))))
-
-  (define (the-empty-termlist) '())
-  (define (first-term term-list) (car term-list))
-  (define (rest-terms term-list) (cdr term-list))
-  (define (empty-termlist? term-list) (null? term-list))
-
-  (define (make-term order coeff) (list order coeff))
-  (define (order term) (car term))
-  (define (coeff term) (cadr term))
+    (let ((tlist (term-list p)))
+      (and (= (order (first-term tlist)) 0) (=zero? (rest-terms tlist)))))
    
-
   (define (tag p) (attach-tag 'polynomial p))
   (put '(polynomial polynomial) 'add
        (lambda (p1 p2) (tag (add-poly p1 p2))))
@@ -121,7 +127,21 @@
        (lambda (var terms) (tag (make-poly var terms))))
   (put 'polynomial '=zero?
        (lambda (p) (tag (=zero? p))))
+  (put 'polynomial 'neg
+       (lambda (p) (tag (neg p))))
   'done)
 
 (install-polynomial-package)
-(
+(define (make-polynomial var terms)
+  ((get 'polynomial 'make) var terms))
+
+(define (add-polynomial p1 p2)
+  (apply-generic 'add p1 p2))
+
+(define (neg p)
+  (apply-generic 'neg p))
+
+(define p (make-polynomial 'x '((2 1) (3 2) (63))))
+p
+(neg p)
+(add-polynomial p (neg p))
