@@ -94,10 +94,15 @@
               (let ((new-c (div (coeff t1) (coeff t2)))
                     (new-o (- (order t1) (order t2))))
                 (let ((rest-of-result 
-                      (div-terms (sub-terms L1 (mul-terms (list (make-term new-o new-c)) L2)) L2)))
-                  (display rest-of-result)
-                  (cons (add-terms (make-term new-o new-c) (car rest-of-result)) (cdr rest-of-result))
-                  ))))))
+                      (div-terms (sub-terms L1
+                                            (mul-terms (list (make-term new-o new-c)) L2))
+                                 L2)))
+                  (let ((quotient (car rest-of-result)))
+                    (if (null? quotient)
+                        (cons (make-term new-o new-c) (cdr rest-of-result))
+                        (cons (add-terms (list (make-term new-o new-c))
+                                         (list (car rest-of-result)))
+                              (cdr rest-of-result))))))))))
   
   (define (div-poly p1 p2)
     (div-terms (term-list p1) (term-list p2)))
@@ -149,11 +154,11 @@
   (put '(polynomial polynomial) 'mul
        (lambda (p1 p2) (tag (mul-poly p1 p2))))
   (put '(polynomial polynomial) 'div
-       (lambda (p1 p2) (tag (div-poly p1 p2))))
+       (lambda (p1 p2) (div-poly p1 p2)))
   (put 'polynomial 'make
        (lambda (var terms) (tag (make-poly var terms))))
   (put '(polynomial) '=zero?
-       (lambda (p) (tag (=zero? p))))
+       (lambda (p) (=zero? p)))
   (put '(polynomial) 'neg
        (lambda (p) (tag (neg p))))
   'done)
@@ -174,9 +179,10 @@
 (define (div-polynomial p1 p2)
   (apply-generic 'div p1 p2))
 
-(define p (make-polynomial 'x '((2 1) (3 2) (6 3))))
+(define p (make-polynomial 'x '((2 1) (3 -2) (6 3))))
 p
 (neg p)
+(=zero? (add p (neg p)))
 (define q (add-polynomial p (neg p)))
 (define a (make-polynomial 'x '((5 1) (0 -1))))
 (define b (make-polynomial 'x '((2 1) (0 -1))))
