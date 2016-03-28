@@ -53,3 +53,57 @@
 (print-queue q1)
 (delete-queue! q1)
 (print-queue q1)
+
+
+(define (make-queue-with-status)
+  (let ((front-ptr '())
+        (rear-ptr '()))
+    (define (empty-queue?)
+      (null? front-ptr))
+    
+    (define (insert-queue! item)
+      (let ((new-pair (mcons item '())))
+        (if (empty-queue?)
+            (begin
+              (set! front-ptr new-pair)
+              (set! rear-ptr new-pair))
+            (begin
+              (set-mcdr! rear-ptr new-pair)
+              (set! rear-ptr new-pair)))))
+    
+    (define (delete-queue!)
+      (if (empty-queue?)
+          (error "DELETE! called with an empty queue")
+          (begin
+            (set! front-ptr (mcdr front-ptr)))))
+    
+    (define (print-queue)
+      (define (print-item item)
+        (if (null? item)
+            (display "")
+            (begin
+              (display (mcar item))
+              (display " ")
+              (print-item (mcdr item)))))
+      (display "(")
+      (print-item front-ptr)
+      (display ")\n"))
+    (define (dispatch m)
+      (cond ((equal? m "insert") insert-queue!)
+            ((equal? m "delete") delete-queue!)
+            ((equal? m "print") print-queue)
+            (else
+             (error "Unsupported command"))))
+    dispatch))
+
+(define q2 (make-queue-with-status))
+(define insert! (q2 "insert"))
+(define delete! (q2 "delete"))
+(define print (q2 "print"))
+(insert! 'a)
+(print)
+(insert! 'b)
+(print)
+(delete!)
+(print)
+  
