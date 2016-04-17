@@ -1,6 +1,12 @@
 #lang racket
 (require scheme/mpair)
 
+(provide make-queue)
+(provide insert-queue!)
+(provide delete-queue!)
+(provide empty-queue?)
+(provide front-queue)
+
 (define (front-ptr queue) (mcar queue))
 (define (rear-ptr queue) (mcdr queue))
 (define (set-front-ptr! queue item) (set-mcar! queue item))
@@ -11,7 +17,7 @@
 (define (front-queue queue)
   (if (empty-queue? queue)
       (error "FRONT called with an empty queue" queue)
-      (mcar (front-queue queue))))
+      (mcar (front-ptr queue))))
 
 (define (insert-queue! queue item)
   (let ((new-pair (mcons item '())))
