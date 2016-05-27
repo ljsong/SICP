@@ -61,3 +61,5 @@
 
 (stream-ref y 7)
 (display-stream z)
+
+(provide map-stream)
