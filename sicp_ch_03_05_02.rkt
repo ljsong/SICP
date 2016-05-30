@@ -122,5 +122,28 @@
 (define sine-series
   (stream-cons 0 (integrate-series cosine-series)))
 
-(stream-ref cosine-series 2)
+(stream-ref cosine-series 4)
 (stream-ref sine-series 5)
+
+(define (mul-series s1 s2)
+  (stream-cons (* (stream-first s1) (stream-first s2))
+               (add-streams (scale-stream (stream-rest s2) (stream-first s1))
+                             (mul-series (stream-rest s1) s2)))) 
+
+(define (reciprocal-series s)    ; constant item should be one
+  (stream-cons 1 (scale-stream (mul-series (stream-rest s) (reciprocal-series s)) -1)))
+
+(define (div-series s1 s2)
+  (if (= (stream-first s2) 0)
+      (error "Divisor should have constant item!")
+      (scale-stream 
+       (mul-series s1 (reciprocal-series
+                       (scale-stream s2 (/ 1 (stream-first s2)))))
+       (/ 1 (stream-first s2)))))
+                   
+
+(define tan-series (div-series sine-series cosine-series))
+(stream-ref tan-series 9)
+
+(provide add-streams)
+(provide scale-stream)
