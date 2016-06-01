@@ -147,3 +147,4 @@
 
 (provide add-streams)
 (provide scale-stream)
+(provide map-stream)

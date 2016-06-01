@@ -223,3 +223,37 @@
     (sum-of-square square-stream)))
 
 (stream-list-n sum-of-square-stream 20)
+
+(define (integral integrand initial-value dt)
+  (define int
+    (stream-cons initial-value
+                 (add-streams (scale-stream integrand dt)
+                              int)))
+  int)
+
+(define (RC r c dt)
+  (lambda (is v0)
+    (add-streams (scale-stream is r)
+                 (scale-stream (integral is v0 dt) (/ 1 c)))))
+
+(define rc1 (RC 5 1 0.5))
+(define vstream (rc1 integers 1))
+(stream-ref vstream 0)
+
+(define (sign-change-detector cur prev)
+  (cond ((and (< (* cur prev) 0) (< prev 0)) 1)
+        ((and (< (* cur prev) 0) (> prev 0)) -1)
+        (else 0)))
+
+(define zero-crossings
+  (map-stream sign-change-detector integers (stream-cons 0 integers)))  ; integers is sense-data
+
+(define (smooth s)
+  (define ss (stream-cons
+              (/ (+ (stream-first s) (stream-first (stream-rest s))) 2)
+              (smooth (stream-rest s))))
+  ss)
+
+(define (make-zero-crossing input-stream)
+  (let ((after-smooth (smooth input-stream)))
+    (stream-map sign-change-detector after-smooth (stream-cons 0 after-smooth))))
