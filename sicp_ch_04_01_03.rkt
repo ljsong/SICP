@@ -1,0 +1,140 @@
+#lang racket
+(require scheme/mpair)
+
+(define (tagged-list? exp tag)
+  (if (pair? exp)
+      (eq? (car exp) tag)
+      false))
+
+(define (true? x)
+  (not (eq? x false)))
+
+(define (false? x)
+  (eq? x false))
+
+(define (make-procedure parameters body env)
+  (list 'procedure parameters body env))
+
+(define (compound-procedure? p)
+  (tagged-list? p 'procedure))
+
+(define (procedure-parameters p) (cadr p))
+(define (procedure-body p) (caddr p))
+(define (procedure-environment p) (cadddr p))
+
+(define (enclosing-environment env) (cdr env))
+(define (first-frame env) (car env))
+(define the-empty-environment '())
+
+(define (make-frame variables values)
+  (mcons variables values))
+
+(define (frame-variables frame) (mcar frame))
+(define (frame-values frame) (mcdr frame))
+
+(define (add-binding-to-frame! var val frame)
+  (set-mcar! frame (mcons var (mcar frame)))
+  (set-mcdr! (mcons val (mcdr frame))))
+
+(define (extend-environment vars vals base-env)
+  (if (= (length vars) (length vals))
+      (mcons (make-frame vars vals) base-env)
+      (if (< (length vars) (length vals))
+          (error "Too many arguments supplied" vars vals)
+          (error "Too few arguments supplied" vars vals))))
+
+; we define environment as a table of frames
+(define (lookup-variable-value var env)
+  (define (env-loop env)
+    (define (scan vars vals)
+      (cond ((null? vars)
+             (env-loop (enclosing-environment env)))
+            ((eq? var (car vars))
+             (car vals))
+            (else (scan (cdr vars) (cdr vals)))))
+    (if (eq? env the-empty-environment)
+        (error "Unbound variable" var)
+        (let ((frame (first-frame env)))
+          (scan (frame-variables frame)
+                (frame-values frame)))))
+  (env-loop env))
+
+(define (set-variable-value! var val env)
+  (define (env-loop env)
+    (define (scan vars vals)
+    (cond ((null? vars)
+           (env-loop (enclosing-environment env)))
+          ((eq? var (car vars))
+           (set-mcar! vals val))
+          (else (scan (cdr vars) (cdr vals)))))
+    (if (eq? env the-empty-environment)
+        (error "Unbound variable -- SET!" var)
+        (let ((frame (first-frame env)))
+          (scan (frame-variables frame)
+                (frame-values frame)))))
+  (env-loop env))
+
+(define (define-variable! var val env)
+  (let ((frame (first-frame env)))
+    (define (scan vars vals)
+      (cond ((null? vars)
+             (add-binding-to-frame! var val frame))
+            ((eq? var (car vars))
+             (set-mcar! vals val))
+            (else (scan (cdr vars) (cdr vals)))))
+    (scan (frame-variables frame)
+          (frame-values frame))))
+
+#| 只需要替换frame-variables,frame-values和set函数即可，对外表示一致，get函数实现不一样。
+(define (map-mul proc list1 list2)
+  (cond ((null? list1) list2)
+        ((null? list2) list1)
+        (else
+         (mcons (mlist (car list1) (car list2))
+               (map-mul proc (cdr list1) (cdr list2))))))
+
+(define (make-frame vars vals)
+  (map-mul mcons vars vals))
+
+(define (frame-variables frame) (mmap mcar frame))
+(define (frame-values frame) (mmap mcdr frame))
+
+(define (add-binding-to-frame! var val frame)
+  (mcons (mcons var val) frame))
+
+(define (set-variable-value! var val env)
+  (define (env-loop env)
+    (define (scan frame)
+    (cond ((null? frame)
+           (env-loop (enclosing-environment env)))
+          ((eq? var (mcar (mcar frame)))
+           (set-mcdr! (mcar frame) val))
+          (else (scan (mcdr frame)))))
+    (if (eq? env the-empty-environment)
+        (error "Unbound variable -- SET!" var)
+        (let ((frame (first-frame env)))
+          (scan frame))))
+  (env-loop env))
+
+(define (define-variable! var val env)
+  (let ((frame (first-frame env)))
+    (define (scan frame)
+      (cond ((null? frame)
+             (add-binding-to-frame! var val frame))
+            ((eq? var (mcar (mcar frame)))
+             (set-mcar! vals val))
+            (else (scan (mcdr frame)))))
+    (scan frame)))
+|#
+
+(define (make-unbound! var env)
+  (let ((frame (first-frame env)))
+    (define (ubound vars vals)
+      (cond ((eq? var (mcar vars))
+             (set-mcar! env (mcons (remove var vars)
+                    (remove (car vals) vals))))
+            (else (ubound (cdr vars) (cdr vals)))))
+    (ubound (frame-variables frame)
+          (frame-values frame))))
+
+(provide lookup-variable-value)

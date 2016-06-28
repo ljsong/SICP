@@ -1,5 +1,6 @@
 #lang racket
 (require "sicp_ch_02_04_02.rkt")
+(require "sicp_ch_04_01_03.rkt")
 
 (define (list-of-values exps env)
   (if (no-operands? exps)
@@ -174,7 +175,7 @@
 
 (define (eval exp env)
   (cond ((self-evaluating? exp) exp)
-        ;((variable? exp) (lookup-variable-value exp env))
+        ((variable? exp) (lookup-variable-value exp env))
         ;((quoted? exp) (text-of-quotation exp))
         ;((assignment? exp) (eval-assignment exp env))
         ;((definition? exp) (eval-definition exp env))
@@ -212,7 +213,7 @@
 
 (define (evaln exp env)
   (cond ((self-evaluating? exp) exp)
-;        ((variable? exp) (lookup-variable-value exp env))
+        ((variable? exp) (lookup-variable-value exp env))
         ((get 'op (car exp)) ((get 'op (car exp)) exp env))
         ((application? exp)
          (apply (evaln (operator exp) env)
