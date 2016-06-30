@@ -9,8 +9,7 @@
 (define (true? x)
   (not (eq? x false)))
 
-(define (false? x)
-  (eq? x false))
+(define apply-in-underlying-scheme apply)
 
 (define (make-procedure parameters body env)
   (list 'procedure parameters body env))
@@ -22,8 +21,8 @@
 (define (procedure-body p) (caddr p))
 (define (procedure-environment p) (cadddr p))
 
-(define (enclosing-environment env) (cdr env))
-(define (first-frame env) (car env))
+(define (enclosing-environment env) (mcdr env))
+(define (first-frame env) (mcar env))
 (define the-empty-environment '())
 
 (define (make-frame variables values)
@@ -33,8 +32,8 @@
 (define (frame-values frame) (mcdr frame))
 
 (define (add-binding-to-frame! var val frame)
-  (set-mcar! frame (mcons var (mcar frame)))
-  (set-mcdr! (mcons val (mcdr frame))))
+  (set-mcar! frame (cons var (mcar frame)))
+  (set-mcdr! frame (cons val (mcdr frame))))
 
 (define (extend-environment vars vals base-env)
   (if (= (length vars) (length vals))
@@ -138,3 +137,14 @@
           (frame-values frame))))
 
 (provide lookup-variable-value)
+(provide compound-procedure?)
+(provide extend-environment)
+(provide make-procedure)
+(provide procedure-body)
+(provide procedure-parameters)
+(provide procedure-environment)
+(provide define-variable!)
+(provide tagged-list?)
+(provide set-variable-value!)
+(provide true?)
+(provide apply-in-underlying-scheme)

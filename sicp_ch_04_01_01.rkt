@@ -31,29 +31,24 @@
 
 (define (variable? exp) (symbol? exp))
 
-;(define (apply procedure arguments)
-;  (cond ((primitive-procedure? procedure)
-;         (apply-primitive-procedure procedure arguments))
-;        ((compund-procedure? procedure)
-;         (eval-sequence
-;          (procedure-body procedure)
-;          (extend-environment
-;           (procedure-parameters procedure)
-;           arguments
-;           (procedure-environment procedure))))
-;        (else
-;         error "Unknown procedure type -- APPLY" procedure)))
+(define (apply procedure arguments)
+  (cond ((primitive-procedure? procedure)
+         (apply-primitive-procedure procedure arguments))
+        ((compound-procedure? procedure)
+         (eval-sequence
+          (procedure-body procedure)
+          (extend-environment
+           (procedure-parameters procedure)
+           arguments
+           (procedure-environment procedure))))
+        (else
+         error "Unknown procedure type -- APPLY" procedure)))
 
 ; 'a = (quote a)
 (define (quoted? exp)
   (tagged-list? exp 'quote))
 
 (define (text-of-quotation exp) (cadr exp))
-
-(define (tagged-list? exp tag)
-  (if (pair? exp)
-      (eq? (car exp) tag)
-      false))
 
 ; set! operatoins
 (define (assignment? exp)
@@ -62,20 +57,32 @@
 (define (assignment-variable exp) (cadr exp))
 (define (assignment-value exp) (caddr exp))
 
+(define (eval-assignment exp env)
+  (set-variable-value! (assignment-variable exp)
+                       (eval (assignment-value exp) env)
+                       env)
+  'OK)
+
 ; definition operations
 (define (definition? exp)
   (tagged-list? exp 'define))
 
 (define (definition-variable exp)
   (if (symbol? (cadr exp))
-      (cadr exp)
-      (caddr exp)))
+      (cadr exp)    ; (define a 3)
+      (caadr exp))) ; (define (func a b) (...))
 
 (define (definition-value exp)
   (if (symbol? (cadr exp))
       (caddr exp)
       (make-lambda (cdadr exp)
                    (cddr exp))))
+
+(define (eval-definition exp env)
+  (define-variable! (definition-variable exp)
+    (eval (definition-value exp) env)   ; 此处eval将lambda转为procedure
+    env)
+  'OK)
 
 ; lambda opreations
 (define (lambda? exp) (tagged-list? exp 'lambda))
@@ -94,6 +101,11 @@
   (if (not (null? (cdddr exp)))
       (cadddr exp)
       'false))
+
+(define (eval-if exp env)
+  (if (true? (eval (if-predicate exp) env))
+      (eval (if-consequent exp) env)
+      (eval (if-alternative exp) env)))
 
 (define (make-if predicate consequent alternative)
   (list 'if predicate consequent alternative))
@@ -173,21 +185,52 @@
             #t
             (eval-or (cdr exp))))))
 
+; sequence
+(define (eval-sequence exps env)
+  (cond ((last-exp? exps) (eval (first-exp exps) env))
+        (else (eval (first-exp exps) env)
+              (eval-sequence (rest-exps) env))))
+
+; primitive procedure
+(define (primitive-procedure? proc)
+  (tagged-list? proc 'primitive))
+
+(define (primitive-implementation proc) (cadr proc))
+
+(define primitive-procedures
+  (list (list 'car car)
+        (list 'cdr cdr)
+        (list 'cons cons)
+        (list 'null? null?)
+        ))
+
+(define (primitive-procedure-names)
+  (map car
+       primitive-procedures))
+
+(define (primitive-procedure-objects)
+  (map (lambda (proc) (list 'primitive (cadr proc)))
+       primitive-procedures))
+
+(define (apply-primitive-procedure proc args)
+  (apply-in-underlying-scheme
+   (primitive-implementation proc) args))
+
 (define (eval exp env)
   (cond ((self-evaluating? exp) exp)
         ((variable? exp) (lookup-variable-value exp env))
-        ;((quoted? exp) (text-of-quotation exp))
-        ;((assignment? exp) (eval-assignment exp env))
-        ;((definition? exp) (eval-definition exp env))
-        ;((if? exp) (eval-if exp env))
+        ((quoted? exp) (text-of-quotation exp))
+        ((assignment? exp) (eval-assignment exp env))
+        ((definition? exp) (eval-definition exp env))
+        ((if? exp) (eval-if exp env))
         ((and? exp) (eval-and exp env))
         ((or? exp) (eval-or exp env))
-        ;((lambda? exp)
-         ;(make-procedure (lambda-parameters exp)
-                         ;(lambda-body exp)
-                         ;env))
-        ;((begin? exp)
-         ;(eval-sequence (begin-actions exp) env))
+        ((lambda? exp)
+         (make-procedure (lambda-parameters exp)
+                         (lambda-body exp)
+                         env))
+        ((begin? exp)
+         (eval-sequence (begin-actions exp) env))
         ((cond? exp) (eval (cond->if exp) env))
         ((application? exp)
          (apply (eval (operator exp) env)
@@ -196,15 +239,15 @@
          (error "Unknown expression type -- EVAL" exp))))
 
 (put 'op 'quote (lambda (exp env) (text-of-quotation exp)))
-;(put 'op 'set! eval-assignment)
-;(put 'op 'define eval-definition)
-;(put 'op 'if eval-if)
-;(put 'op 'lambda (lambda (exp env)
-;                   (make-procedure (lambda-parameters exp)
-;                                   (lambda-body exp)
-;                                   env)))
-;(put 'op 'begin (lambda (exp env)
-;                  (eval-sequence (begin-actions exp) env)))
+(put 'op 'set! eval-assignment)
+(put 'op 'define eval-definition)
+(put 'op 'if eval-if)
+(put 'op 'lambda (lambda (exp env)
+                   (make-procedure (lambda-parameters exp)
+                                   (lambda-body exp)
+                                   env)))
+(put 'op 'begin (lambda (exp env)
+                  (eval-sequence (begin-actions exp) env)))
 (put 'op 'cond (lambda (exp env)
                  (eval (cond->if exp) env)))
 
@@ -270,3 +313,7 @@
                     (z (+ x y 5)))
                (* x z)))
 (let*->nested-lets test '())
+
+(provide primitive-procedure-names)
+(provide primitive-procedure-objects)
+(provide eval)
