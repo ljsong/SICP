@@ -202,6 +202,7 @@
         (list 'cdr cdr)
         (list 'cons cons)
         (list 'null? null?)
+        (list '* *)
         ))
 
 (define (primitive-procedure-names)
