@@ -2,7 +2,6 @@
 (require "sicp_ch_04_01_03.rkt")
 (require "sicp_ch_04_01_01.rkt")
 
-(define the-empty-environment '())
 (define (setup-environment)
   (let ((initial-env
          (extend-environment (primitive-procedure-names)
@@ -18,7 +17,7 @@
 (define (driver-loop)
   (prompt-for-input input-prompt)
   (let ((input (read)))
-    (let ((output (eval input the-global-environment)))
+    (let ((output (ieval input the-global-environment)))
       (announce-output output-prompt)
       (user-print output)))
   (driver-loop))
@@ -38,4 +37,9 @@
       (display object)))
 
 (define the-global-environment (setup-environment))
-(driver-loop)
+; (driver-loop)
+
+(provide setup-environment)
+(provide user-print)
+(provide prompt-for-input)
+(provide announce-output)

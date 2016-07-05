@@ -203,6 +203,10 @@
         (list 'cons cons)
         (list 'null? null?)
         (list '* *)
+        (list '/ /)
+        (list '+ +)
+        (list '- -)
+        (list '= equal?)
         ))
 
 (define (primitive-procedure-names)
@@ -315,6 +319,8 @@
                (* x z)))
 (let*->nested-lets test '())
 
-(provide primitive-procedure-names)
-(provide primitive-procedure-objects)
-(provide eval)
+(provide (except-out (all-defined-out)
+                     eval apply eval-if))
+(provide (rename-out [eval ieval]
+                     [apply iapply]
+                     [eval-if ieval-if]))
