@@ -61,14 +61,23 @@
                 (frame-values frame)))))
   (env-loop env))
 
+(define (set-car! list obj)
+  (if (pair? list)
+      (let ((new-list (remove (car list) list)))
+        (reverse (append (reverse new-list) obj)))
+      (error "Type mismatch, expected a list" list)))
+
+(define test-list '(1 2 3 4))
+(set-car! test-list 5)
+test-list
+
 (define (set-variable-value! var val env)
   (define (env-loop env)
     (define (scan vars vals)
     (cond ((null? vars)
            (env-loop (enclosing-environment env)))
           ((eq? var (car vars))
-           (begin (remove (car vals) vals)
-                  (reverse (append (reverse vals) (list val)))))    ; set-car!
+           (set-car! vals val))
           (else (scan (cdr vars) (cdr vals)))))
     (if (eq? env the-empty-environment)
         (error "Unbound variable -- SET!" var)
@@ -83,8 +92,7 @@
       (cond ((null? vars)
              (add-binding-to-frame! var val frame))
             ((eq? var (car vars))
-             (begin (remove (car vals) vals)
-                    (reverse (append (reverse vals) (list val)))))    ; set-car!
+             (set-car! vals val))
             (else (scan (cdr vars) (cdr vals)))))
     (scan (frame-variables frame)
           (frame-values frame))))
