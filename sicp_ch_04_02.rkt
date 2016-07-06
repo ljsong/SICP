@@ -7,6 +7,36 @@
 (define (actual-value exp env)
   (force-it (eval exp env)))
 
+(define (force-it obj)
+  (cond ((thunk? obj)
+         (let ((result (actual-value
+                        (thunk-exp obj)
+                        (thunk-env obj))))
+           (set-mcar! obj 'evaluated-thunk)
+           (set-mcar! (mcdr obj) result)
+           (set-mcdr! (mcdr obj) '())
+           result))
+        ((evaluated-thunk? obj)
+         (thunk-value obj))
+        (else obj)))
+
+(define (eval-sequence exps env)
+  (cond ((last-exp? exps) (eval (first-exp exps) env))
+        (else (eval (first-exp exps) env)
+              (eval-sequence (rest-exps exps) env))))
+
+(define (eval-definition exp env)
+  (define-variable! (definition-variable exp)
+    (eval (definition-value exp) env)   ; 此处eval将lambda转为procedure
+    env)
+  'OK)
+
+(define (eval-assignment exp env)
+  (set-variable-value! (assignment-variable exp)
+                       (eval (assignment-value exp) env)
+                       env)
+  'OK)
+
 (define (apply procedure arguments env)
   (cond ((primitive-procedure? procedure)
          (apply-primitive-procedure
@@ -16,8 +46,8 @@
          (eval-sequence
           (procedure-body procedure)
           (extend-environment
-           (procedure-parameters procedure)
-           (list-of-delayed-args arguments env)
+           (procedure-parameters procedure) ; param: name
+           (list-of-delayed-args arguments env) ; argus: vals of params
            (procedure-environment procedure))))
         (else
          (error "Unknown procedure type -- APPLY" procedure))))
@@ -64,31 +94,29 @@
       (eval (if-alternative exp) env)))
 
 (define (delay-it exp env)
-  (list 'thunk exp env))
+  (mlist 'thunk exp env))
+
+(define (tagged-mlist? exp tag)
+  (if (mpair? exp)
+      (eq? (mcar exp) tag)
+      false))
 
 (define (thunk? obj)
-  (tagged-list? obj 'thunk))
+  (tagged-mlist? obj 'thunk))
 
-(define (thunk-exp thunk) (cadr thunk))
-(define (thunk-env thunk) (caddr thunk))
+(define (mcadr obj)
+  (mcar (mcdr obj)))
+
+(define (mcaddr obj)
+  (mcar (mcdr (mcdr obj))))
+
+(define (thunk-exp thunk) (mcadr thunk))
+(define (thunk-env thunk) (mcaddr thunk))
 
 (define (evaluated-thunk? obj)
-  (tagged-list? obj 'evaluated-thunk))
+  (tagged-mlist? obj 'evaluated-thunk))
 
-(define (thunk-value evaluated-thunk) (cadr evaluated-thunk))
-
-(define (force-it obj)
-  (cond ((thunk? obj)
-         (let ((result (actual-value
-                        (thunk-exp obj)
-                        (thunk-env obj))))
-           (set-mcar! obj 'evaluated-thunk)
-           (set-mcar! (mcdr obj) result)
-           (set-mcdr! (mcdr obj) '())
-           result))
-        ((evaluated-thunk? obj)
-         (thunk-value obj))
-        (else obj)))
+(define (thunk-value evaluated-thunk) (mcadr evaluated-thunk))
 
 (define input-prompt ";;; L-Eval input:")
 (define output-prompt ";;; L-Eval value:")

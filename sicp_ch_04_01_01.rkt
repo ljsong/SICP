@@ -189,7 +189,7 @@
 (define (eval-sequence exps env)
   (cond ((last-exp? exps) (eval (first-exp exps) env))
         (else (eval (first-exp exps) env)
-              (eval-sequence (rest-exps) env))))
+              (eval-sequence (rest-exps exps) env))))
 
 ; primitive procedure
 (define (primitive-procedure? proc)
@@ -207,6 +207,9 @@
         (list '+ +)
         (list '- -)
         (list '= equal?)
+        (list 'display display)
+        (list 'list list)
+        (list 'newline newline)
         ))
 
 (define (primitive-procedure-names)
@@ -320,7 +323,10 @@
 (let*->nested-lets test '())
 
 (provide (except-out (all-defined-out)
-                     eval apply eval-if))
+                     eval apply eval-if eval-sequence eval-definition eval-assignment))
 (provide (rename-out [eval ieval]
                      [apply iapply]
-                     [eval-if ieval-if]))
+                     [eval-if ieval-if]
+                     [eval-sequence ieval-sequence]
+                     [eval-definition ieval-definition]
+                     [eval-assignment ieval-assignment]))

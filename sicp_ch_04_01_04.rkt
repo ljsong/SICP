@@ -37,7 +37,7 @@
       (display object)))
 
 (define the-global-environment (setup-environment))
-; (driver-loop)
+;(driver-loop)
 
 (provide setup-environment)
 (provide user-print)
