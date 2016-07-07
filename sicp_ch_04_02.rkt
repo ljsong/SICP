@@ -52,10 +52,18 @@
         (else
          (error "Unknown procedure type -- APPLY" procedure))))
 
+(define (lazy-list items)
+  (define (wrap-lazy-list first-item rest-items)
+    (if (null? rest-items)
+        (make-lambda '(m) (list first-item))
+        (make-lambda '(m) (list first-item (wrap-lazy-list (car rest-items) (cdr rest-items))))))
+  (wrap-lazy-list (car items) (cdr items)))
+
 (define (eval exp env)
+  (display exp)
   (cond ((self-evaluating? exp) exp)
         ((variable? exp) (lookup-variable-value exp env))
-        ((quoted? exp) (text-of-quotation exp))
+        ((quoted? exp) (eval (lazy-list (text-of-quotation exp)) env))
         ((assignment? exp) (eval-assignment exp env))
         ((definition? exp) (eval-definition exp env))
         ((if? exp) (eval-if exp env))
@@ -84,7 +92,7 @@
 (define (list-of-delayed-args exps env)
   (if (no-operands? exps)
       '()
-      (cons (delay-it (first-operand exps) env)
+      (mcons (delay-it (first-operand exps) env)
             (list-of-delayed-args (rest-operands exps)
                                   env))))
 

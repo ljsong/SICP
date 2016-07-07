@@ -1,4 +1,5 @@
 #lang racket
+(require scheme/mpair)
 (require "sicp_ch_02_04_02.rkt")
 (require "sicp_ch_04_01_03.rkt")
 
@@ -198,7 +199,7 @@
 (define (primitive-implementation proc) (cadr proc))
 
 (define primitive-procedures
-  (list (list 'car car)
+  (mlist (list 'car car)
         (list 'cdr cdr)
         (list 'cons cons)
         (list 'null? null?)
@@ -213,11 +214,11 @@
         ))
 
 (define (primitive-procedure-names)
-  (map car
+  (mmap car
        primitive-procedures))
 
 (define (primitive-procedure-objects)
-  (map (lambda (proc) (list 'primitive (cadr proc)))
+  (mmap (lambda (proc) (list 'primitive (cadr proc)))
        primitive-procedures))
 
 (define (apply-primitive-procedure proc args)
